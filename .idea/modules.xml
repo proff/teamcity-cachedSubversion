@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/build/build.iml" filepath="$PROJECT_DIR$/build/build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cachedSubversion.iml" filepath="$PROJECT_DIR$/cachedSubversion.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cachedSubversion-agent/cachedSubversion-agent.iml" filepath="$PROJECT_DIR$/cachedSubversion-agent/cachedSubversion-agent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cachedSubversion-common/cachedSubversion-common.iml" filepath="$PROJECT_DIR$/cachedSubversion-common/cachedSubversion-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cachedSubversion-server/cachedSubversion-server.iml" filepath="$PROJECT_DIR$/cachedSubversion-server/cachedSubversion-server.iml" />
+    </modules>
+  </component>
+</project>

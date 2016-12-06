@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:schemas-jetbrains-com:teamcity-plugin-v1-xml">
+  <info>
+    <name>cachedSubversion</name>
+    <display-name>Cached Subversion</display-name>
+    <version>@Version@</version>
+    <description>Cache subversion repositories on agent</description>
+    <download-url>https://github.com/proff/teamcity-cachedSubversion</download-url>
+    <email>proff@proff.email</email>
+    <vendor>
+      <name>@VendorName@</name>
+      <url>@VendorURL@</url>
+    </vendor>
+  </info>
+  <deployment use-separate-classloader="true" />
+</teamcity-plugin>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="cachedSubversion-agent" />
+        <module name="cachedSubversion-common" />
+        <module name="cachedSubversion-server" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="build" target="1.5" />
+      <module name="cachedSubversion" target="1.5" />
+      <module name="cachedSubversion-agent" target="1.6" />
+      <module name="cachedSubversion-common" target="1.6" />
+      <module name="cachedSubversion-server" target="1.6" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
