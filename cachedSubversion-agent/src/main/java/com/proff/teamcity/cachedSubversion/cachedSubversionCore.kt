@@ -34,7 +34,7 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
                 logger.warning("url is null, skipping")
                 continue
             }
-            val revision = runningBuild.getBuildCurrentVersion(entry.vcsRoot).toLong()
+            val revision = runningBuild.getBuildCurrentVersion(entry.vcsRoot).split("_")[0].toLong()
             val user = entry.properties["user"]
             val password = entry.properties["secure:svn-password"]
 
