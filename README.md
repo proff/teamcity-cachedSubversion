@@ -12,7 +12,7 @@ execute *mvn package* in root folder
 
 # Using
 1. Install plugin
-2. Write in *config/cachedSubversion.repositories* file urls you want to cache. One url one line. Urls can be to any directory in repository, only that part will be cached.
+2. Write on server in *config/cachedSubversion.repositories* file urls you want to cache. One url one line. Urls can be to any directory in repository, only that part will be cached.
 3. In build configuration with standard Subversion repository change checkout mode to *"Do not checkout files automatically"* and add build feature *"cache subversion"*.
 
 # Features
