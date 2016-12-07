@@ -48,6 +48,9 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
                     svnUrl = SVNURL.fromFile(File(target.absolutePath + url.removePrefix(root.toString())))
                 }
             }
+            if (runningBuild.interruptReason != null)
+                return
+
             var rules = entry.checkoutRulesSpecification
             if (rules.isNullOrBlank())
                 rules = ".=>."
@@ -79,7 +82,7 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
     } catch(e: CancellationException) {
         logger.warning("build cancelled")
     } catch(e: Exception) {
-        logger.error("error: $e")
+        runningBuild.stopBuild("error in cachedSubersion: $e")
         throw e
     } finally {
         logger.activityFinished(activityName, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
@@ -97,16 +100,38 @@ private fun doCache(cacheUrl: String, runningBuild: AgentRunningBuild, revision:
             logger.message("creating cache repository")
             client.initialize(cacheUrl, cacheTarget)
         }
-        val lastRevision = client.lastRevision(cacheTarget)
-        if (lastRevision < revision) {
-            logger.message("synchronizing to $cacheTarget")
-            client.synchronize(cacheTarget)
-            logger.message("packing")
-            client.pack(cacheTarget)
-        }
+        doSync(cacheTarget, revision, client, runningBuild)
         return cacheTarget
     } finally {
         logger.activityFinished(activityName, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
+    }
+}
+
+private fun doSync(cacheTarget: File, revision: Long, client: svnClient, runningBuild: AgentRunningBuild) {
+    var logger = runningBuild.buildLogger
+    var delay = 1
+    logger.message("synchronizing to $cacheTarget")
+    while (true) {
+        try {
+            if (runningBuild.interruptReason != null) {
+                return
+            }
+            val lastRevision = client.lastRevision(cacheTarget)
+            if (lastRevision < revision) {
+                client.synchronize(cacheTarget)
+                val newLastRevision = client.lastRevision(cacheTarget)
+                if (lastRevision / 1000 < newLastRevision / 1000) {
+                    logger.message("packing")
+                    client.pack(cacheTarget)
+                }
+                return
+            }
+        } catch(e: RepositoryLockedException) {
+            logger.message("repo is locked by ${e.holder}, retry after $delay seconds")
+            Thread.sleep((delay * 1000).toLong())
+            if (delay < 60)
+                delay++
+        }
     }
 }
 

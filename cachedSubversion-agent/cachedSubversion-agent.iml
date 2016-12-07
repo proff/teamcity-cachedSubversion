@@ -91,7 +91,6 @@
     <orderEntry type="library" name="Maven: org.antlr:antlr-runtime:3.4" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna-platform:4.1.0" level="project" />
-    <orderEntry type="library" name="Maven: com.trilead:trilead-ssh2:1.0.0-build221" level="project" />
     <orderEntry type="library" name="Maven: com.jcraft:jsch.agentproxy.connector-factory:0.0.7" level="project" />
     <orderEntry type="library" name="Maven: com.jcraft:jsch.agentproxy.core:0.0.7" level="project" />
     <orderEntry type="library" name="Maven: com.jcraft:jsch.agentproxy.usocket-jna:0.0.7" level="project" />
@@ -100,6 +99,7 @@
     <orderEntry type="library" name="Maven: com.jcraft:jsch.agentproxy.sshagent:0.0.7" level="project" />
     <orderEntry type="library" name="Maven: com.jcraft:jsch.agentproxy.pageant:0.0.7" level="project" />
     <orderEntry type="library" name="Maven: com.jcraft:jsch.agentproxy.svnkit-trilead-ssh2:0.0.7" level="project" />
+    <orderEntry type="library" name="Maven: com.trilead:trilead-ssh2:1.0.0-build217" level="project" />
     <orderEntry type="library" name="Maven: org.tmatesoft.svnkit:svnkit-cli:1.8.14" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.0.5-2" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-runtime:1.0.5-2" level="project" />

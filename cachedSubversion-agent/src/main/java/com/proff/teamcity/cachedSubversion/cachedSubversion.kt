@@ -24,6 +24,4 @@ class cachedSubversion(agentDispatcher: EventDispatcher<AgentLifeCycleListener>)
     override fun buildStarted(runningBuild: AgentRunningBuild) {
         run(runningBuild, false)
     }
-
-
 }

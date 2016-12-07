@@ -25,5 +25,4 @@ execute *mvn package* in root folder
 
 # Known Issues
 * ssh keys currently are not supported
-* strange problems with active directory athorization 
 * unstable work with active TSVNCache (part of the TortoiseSVN)

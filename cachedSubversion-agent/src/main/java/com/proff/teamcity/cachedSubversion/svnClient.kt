@@ -2,13 +2,12 @@ package com.proff.teamcity.cachedSubversion
 
 import jetbrains.buildServer.agent.AgentRunningBuild
 import jetbrains.buildServer.agent.BuildProgressLogger
-import org.tmatesoft.svn.core.SVNDepth
-import org.tmatesoft.svn.core.SVNException
-import org.tmatesoft.svn.core.SVNNodeKind
-import org.tmatesoft.svn.core.SVNURL
-import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager
+import org.tmatesoft.svn.core.*
+import org.tmatesoft.svn.core.auth.*
 import org.tmatesoft.svn.core.internal.util.SVNUUIDGenerator
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions
+import org.tmatesoft.svn.core.io.SVNRepository
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory
 import org.tmatesoft.svn.core.wc.SVNClientManager
 import org.tmatesoft.svn.core.wc.SVNRevision
@@ -16,7 +15,7 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil
 import org.tmatesoft.svn.core.wc.admin.SVNAdminClient
 import java.io.File
 import java.util.concurrent.CancellationException
-
+import javax.net.ssl.TrustManager
 
 open class svnClient(user: String?, password: String?, val build: AgentRunningBuild) {
     companion object {
@@ -28,14 +27,17 @@ open class svnClient(user: String?, password: String?, val build: AgentRunningBu
     private val client: SVNClientManager
     private val admin: SVNAdminClient
     private val logger: BuildProgressLogger
-    private val authManager: ISVNAuthenticationManager
+    private val authManager: DefaultSVNAuthenticationManager
 
     init {
         val options = DefaultSVNOptions()
+        authManager = DefaultSVNAuthenticationManager(null, false, user, password?.toCharArray(), null, null)
+        if (user != null)
+            authManager.isAuthenticationForced = true
         client = SVNClientManager.newInstance(options, user, password)
+        client.setAuthenticationManager(authManager)
         admin = client.adminClient
         logger = build.buildLogger
-        authManager = SVNWCUtil.createDefaultAuthenticationManager(user, password?.toCharArray())
     }
 
     fun initialize(from: String, to: File) {
@@ -44,13 +46,29 @@ open class svnClient(user: String?, password: String?, val build: AgentRunningBu
     }
 
     open fun synchronize(file: File) {
-        admin.setReplayHandler({
-            logger.message(it.revision.toString())
-            if (build.interruptReason != null) {
-                throw CancellationException()
+        try {
+            val locked = getSyncLockedBy(file)
+            if (locked != null)
+                throw RepositoryLockedException(locked)
+            admin.setReplayHandler({
+                logger.message(it.revision.toString())
+                if (build.interruptReason != null) {
+                    throw CancellationException()
+                }
+            })
+            admin.doSynchronize(SVNURL.fromFile(file))
+        } catch(e: SVNException) {
+            if (e.errorMessage?.errorCode?.code == 204899 && e?.errorMessage?.childErrorMessage != null) {
+                val child = e.errorMessage.childErrorMessage
+                val code = child.errorCode?.code
+                if (code != 204899)
+                    throw e
+                val message = child.message
+                val match = Regex("Failed to get lock on destination repos, currently held by '(.*)'").find(message) ?: throw e
+                throw RepositoryLockedException(match.groupValues[1])
             }
-        })
-        admin.doSynchronize(SVNURL.fromFile(file))
+            throw e
+        }
     }
 
     fun pack(file: File) {
@@ -63,8 +81,8 @@ open class svnClient(user: String?, password: String?, val build: AgentRunningBu
 
     fun checkout(url: SVNURL, to: File, revision: Long, mode: checkoutMode) {
         if (mode == checkoutMode.DeleteExport || mode == checkoutMode.Export) {
-            if(mode==checkoutMode.DeleteExport) {
-                if(!to.deleteRecursively())
+            if (mode == checkoutMode.DeleteExport) {
+                if (!to.deleteRecursively())
                     logger.warning("Directory $to can't be completely deleted")
             }
             client.updateClient.doExport(url, to, SVNRevision.create(revision), SVNRevision.create(revision), null, true, SVNDepth.INFINITY)
@@ -115,4 +133,12 @@ open class svnClient(user: String?, password: String?, val build: AgentRunningBu
         val nodeKind = repo.checkPath(path, repo.latestRevision)
         return nodeKind == SVNNodeKind.FILE
     }
+
+    private fun getSyncLockedBy(file: File): String? {
+        val repo = SVNRepositoryFactory.create(SVNURL.fromFile(file))
+        repo.authenticationManager = authManager
+        var properties = repo.getRevisionProperties(0, null)
+        return properties.getStringValue("svn:sync-lock")
+    }
+
 }
