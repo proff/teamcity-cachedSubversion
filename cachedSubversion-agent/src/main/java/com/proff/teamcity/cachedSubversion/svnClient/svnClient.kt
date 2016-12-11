@@ -8,7 +8,7 @@ import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager
 import org.tmatesoft.svn.core.wc.SVNRevision
 import java.io.File
 
-open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper: iFileHelper) {
+open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper: iFileHelper) : iSvnClient {
     companion object {
         fun create(user: String?, password: String?, build: AgentRunningBuild): svnClient {
             val authManager = DefaultSVNAuthenticationManager(null, false, user, password?.toCharArray(), null, null)
@@ -18,18 +18,18 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
         }
     }
 
-    fun createAndInitialize(from: SVNURL, to: File) {
+    override fun createAndInitialize(from: SVNURL, to: File) {
         kit.doCreateRepository(to, SVNUUIDGenerator.generateUUIDString(), true, false)
         kit.doInitialize(from, SVNURL.fromFile(to))
     }
 
-    fun initializeIfRequired(from: SVNURL, to: SVNURL) {
+    override fun initializeIfRequired(from: SVNURL, to: SVNURL) {
         val properties = kit.getRevisionProperties(to, 0, null)
         if (properties.getStringValue("svn:sync-from-uuid") == null)
             kit.doInitialize(from, to)
     }
 
-    open fun synchronize(url: SVNURL) {
+    override fun synchronize(url: SVNURL) {
         try {
             val locked = getSyncLockedBy(url)
             if (locked != null)
@@ -51,11 +51,11 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
         }
     }
 
-    fun pack(file: File) {
+    override fun pack(file: File) {
         kit.doPack(file)
     }
 
-    fun lastRevision(url: SVNURL): Long {
+    override fun lastRevision(url: SVNURL): Long {
         return kit.doInfo(url).lastMergedRevision
     }
 
@@ -85,7 +85,7 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
         }
     }
 
-    fun getRootUri(url: String, revision: SVNRevision): SVNURL {
+    override fun getRootUri(url: String, revision: SVNRevision): SVNURL {
         return getRootUri(SVNURL.parseURIEncoded(url), revision)
     }
 

@@ -25,4 +25,5 @@ execute *mvn package* in root folder
 
 # Known Issues
 * ssh keys currently are not supported
-* unstable work with active TSVNCache (part of the TortoiseSVN)
+* unstable work with active TSVNCache (part of the TortoiseSVN) 
+* configurations with other vcs are not supported. Workaround: you should checkout manually or add as artifact dependency

@@ -6,20 +6,55 @@
     </td>
 </tr>
 
-<tr class="noBorder">
+<tr class="noBorder cachedSubversion">
     <th>Checkout mode:</th>
     <td>
-        <props:selectProperty name="cachedSubversion.mode">
-            <props:option value="revertCheckout">revert and checkout/update</props:option>
-            <props:option value="checkout">checkout/update</props:option>
-            <props:option value="deleteExport">delete and export</props:option>
-            <props:option value="export">export</props:option>
+        <props:selectProperty id="cachedSubversion.mode" name="cachedSubversion.mode"
+                              onchange="BS.cachedSubversion.update()">
+            <props:option value="Checkout">Checkout/update</props:option>
+            <props:option value="Export">Export</props:option>
         </props:selectProperty>
         <span class="smallNote">
-            <b>Revert and checkout/update</b> - revert directory before swabra cleanup and checkout/update after swabra cleanup. <b>.svn</b> directory will be in working copy<br/><br/>
-            <b>Checkout/update</b> - checkout/update after swabra cleanup. <b>.svn</b> directory will be in working copy. All changes will remain intact, there may be conflicts<br/><br/>
+            <b>Checkout/update</b> - checkout/update after swabra cleanup. <b>.svn</b> directory will be in working directory.<br/>
             <b>Delete and export</b> - delete folder and export from repository. Working copy will be without <b>.svn</b> directory, updates will be slower<br/>Checkout rules to file always use this value<br/><br/>
             <b>Export</b> - Export directory from repository. Working copy will be without <b>.svn</b> directory, updates will be slower. Deleted in repository files will remain intact<br/><br/>
     </span>
     </td>
 </tr>
+<tr class="noBorder cachedSubversion-checkout">
+    <th>Revert before update:</th>
+    <td>
+        <props:checkboxProperty name="cachedSubversion.revert" value="true"/>
+        <span class="smallNote">Revert directory before swabra cleanup. Recommends instead of swabra cleanup</span>
+    </td>
+</tr>
+<tr class="noBorder cachedSubversion-checkout">
+    <th>Cleanup before update:</th>
+    <td>
+        <props:checkboxProperty name="cachedSubversion.clean" value="true"/>
+        <span class="smallNote">Cleanup directory before swabra cleanup. Recommends instead of swabra cleanup</span>
+    </td>
+</tr>
+<tr class="noBorder cachedSubversion-export">
+    <th>Delete before export:</th>
+    <td>
+        <props:checkboxProperty name="cachedSubversion.delete" value="true"/>
+        <span class="smallNote">Delete directory before export</span>
+    </td>
+</tr>
+<script type="text/javascript">
+    BS.cachedSubversion = {
+        update: function () {
+            var val = jQuery("select[name='prop:cachedSubversion.mode']").val();
+            if (val == "Checkout") {
+                jQuery(".cachedSubversion-export").hide();
+                jQuery(".cachedSubversion-checkout").show();
+            } else {
+                jQuery(".cachedSubversion-export").show();
+                jQuery(".cachedSubversion-checkout").hide();
+            }
+        }
+    }
+
+    BS.cachedSubversion.update()
+</script>

@@ -1,5 +1,6 @@
 package com.proff.teamcity.cachedSubversion
 
+import com.proff.teamcity.cachedSubversion.svnClient.svnClientFactory
 import jetbrains.buildServer.agent.AgentLifeCycleAdapter
 import jetbrains.buildServer.agent.AgentLifeCycleListener
 import jetbrains.buildServer.agent.AgentRunningBuild
@@ -22,6 +23,8 @@ class cachedSubversion(agentDispatcher: EventDispatcher<AgentLifeCycleListener>)
     }
 
     override fun buildStarted(runningBuild: AgentRunningBuild) {
-        run(runningBuild, false)
+        val build = com.proff.teamcity.cachedSubversion.runningBuild(runningBuild)
+        val core = cachedSubversionCore(build, svnClientFactory(runningBuild), checkoutSettings.create(build), cacher(build, fileHelper()))
+        core.run(false)
     }
 }
