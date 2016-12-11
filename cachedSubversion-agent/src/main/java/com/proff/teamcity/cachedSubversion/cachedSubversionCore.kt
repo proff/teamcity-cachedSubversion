@@ -2,10 +2,14 @@ package com.proff.teamcity.cachedSubversion
 
 import com.proff.teamcity.cachedSubversion.cachedSubversionConstants.Companion.CACHE_PATH_CONFIG_KEY
 import com.proff.teamcity.cachedSubversion.cachedSubversionConstants.Companion.DISABLED_CONFIG_KEY
+import com.proff.teamcity.cachedSubversion.svnClient.svnClient
 import jetbrains.buildServer.agent.AgentRunningBuild
 import jetbrains.buildServer.agentServer.AgentBuild
 import jetbrains.buildServer.messages.DefaultMessagesInfo
+import org.tmatesoft.svn.core.SVNCancelException
+import org.tmatesoft.svn.core.SVNException
 import org.tmatesoft.svn.core.SVNURL
+import org.tmatesoft.svn.core.wc.SVNRevision
 import java.io.File
 import java.util.concurrent.CancellationException
 
@@ -21,9 +25,10 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
         }
         if (!cachingEnabled)
             return
-        val mode = getCheckoutMode(caching.single().parameters[cachedSubversionConstants.MODE_CONFIG_KEY])
-        if (mode !== checkoutMode.RevertCheckout && beforeSwabra)
+        val settings = getCheckoutSettings(caching.single().parameters)
+        if ((settings.mode != checkoutMode.Checkout || !settings.revert) && beforeSwabra)
             return
+
         logger.activityStarted(activityName, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
         for (entry in runningBuild.vcsRootEntries) {
             val type = entry.vcsRoot.vcsName
@@ -41,11 +46,11 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
             val client = svnClient.create(user, password, runningBuild)
             var svnUrl = SVNURL.parseURIEncoded(url)
             if (!beforeSwabra) {
-                val cacheUrl = getCacheUrl(url, runningBuild)
-                if (cacheUrl != null) {
-                    val target = doCache(cacheUrl, runningBuild, revision, client)
-                    val root = client.getRootUri(url)
-                    svnUrl = SVNURL.fromFile(File(target.absolutePath + url.removePrefix(root.toString())))
+                val cacheRule = getCacheUrl(url, runningBuild)
+                if (cacheRule != null) {
+                    val target = doCache(cacheRule, runningBuild, revision, client)
+                    val root = client.getRootUri(url, SVNRevision.create(revision))
+                    svnUrl = target.appendPath(url.removePrefix(root.toString()), false)
                 }
             }
             if (runningBuild.interruptReason != null)
@@ -75,12 +80,12 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
                 if (beforeSwabra)
                     client.revert(toPath)
                 else
-                    client.checkout(fromUrl, toPath, revision, mode)
+                    client.checkout(fromUrl, toPath, SVNRevision.create(revision), settings)
             }
         }
         logger.message("completed")
-    } catch(e: CancellationException) {
-        logger.warning("build cancelled")
+    } catch(e: SVNCancelException) {
+        logger.warning("cancelled")
     } catch(e: Exception) {
         runningBuild.stopBuild("error in cachedSubersion: $e")
         throw e
@@ -89,40 +94,44 @@ fun run(runningBuild: AgentRunningBuild, beforeSwabra: Boolean) {
     }
 }
 
-private fun doCache(cacheUrl: String, runningBuild: AgentRunningBuild, revision: Long, client: svnClient): File {
+private fun doCache(rule: cacheRule, runningBuild: AgentRunningBuild, revision: Long, client: svnClient): SVNURL {
     val logger = runningBuild.buildLogger
-    val activityName = "caching $cacheUrl"
+    val activityName = "caching ${rule.source}"
     logger.activityStarted(activityName, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
     try {
-        val cacheTarget = getCacheTarget(runningBuild, cacheUrl)
-        if (!cacheTarget.exists()) {
-            cacheTarget.mkdirs()
+        val cacheTarget = getCacheTarget(runningBuild, rule)
+        if (cacheTarget.file != null && !cacheTarget.file.exists()) {
+            cacheTarget.file.mkdirs()
             logger.message("creating cache repository")
-            client.initialize(cacheUrl, cacheTarget)
+            client.createAndInitialize(rule.source, cacheTarget.file)
+        } else {
+            client.initializeIfRequired(rule.source, cacheTarget.url)
         }
+        logger.message("synchronizing to ${cacheTarget.url}")
         doSync(cacheTarget, revision, client, runningBuild)
-        return cacheTarget
+        return cacheTarget.url
     } finally {
         logger.activityFinished(activityName, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
     }
 }
 
-private fun doSync(cacheTarget: File, revision: Long, client: svnClient, runningBuild: AgentRunningBuild) {
-    var logger = runningBuild.buildLogger
+private fun doSync(cacheTarget: cacheTarget, revision: Long, client: svnClient, runningBuild: AgentRunningBuild) {
+    val logger = runningBuild.buildLogger
     var delay = 1
-    logger.message("synchronizing to $cacheTarget")
     while (true) {
         try {
             if (runningBuild.interruptReason != null) {
                 return
             }
-            val lastRevision = client.lastRevision(cacheTarget)
+            val lastRevision = client.lastRevision(cacheTarget.url)
             if (lastRevision < revision) {
-                client.synchronize(cacheTarget)
-                val newLastRevision = client.lastRevision(cacheTarget)
-                if (lastRevision / 1000 < newLastRevision / 1000) {
-                    logger.message("packing")
-                    client.pack(cacheTarget)
+                client.synchronize(cacheTarget.url)
+                if (cacheTarget.file != null) {
+                    val newLastRevision = client.lastRevision(cacheTarget.url)
+                    if (lastRevision / 1000 < newLastRevision / 1000) {
+                        logger.message("packing")
+                        client.pack(cacheTarget.file)
+                    }
                 }
                 return
             }
@@ -135,32 +144,86 @@ private fun doSync(cacheTarget: File, revision: Long, client: svnClient, running
     }
 }
 
-private fun getCacheTarget(runningBuild: AgentRunningBuild, cacheUrl: String): File {
+private fun getCacheTarget(runningBuild: AgentRunningBuild, cacheRule: cacheRule): cacheTarget {
+    if (!cacheRule.name.isNullOrBlank()) {
+        val customPath = runningBuild.agentConfiguration.configurationParameters[CACHE_PATH_CONFIG_KEY + "." + cacheRule.name]
+        if (!customPath.isNullOrBlank()) {
+            try {
+                return cacheTarget(SVNURL.parseURIEncoded(customPath))
+            } catch(e: SVNException) {
+                return cacheTarget(File(customPath))
+            }
+        }
+    }
+    if (cacheRule.target != null)
+        return cacheRule.target
     var root = File(runningBuild.agentConfiguration.systemDirectory, "cachedSubversion")
     val customPath = runningBuild.agentConfiguration.configurationParameters[CACHE_PATH_CONFIG_KEY]
     if (customPath != null)
         root = File(customPath)
-    val cacheFile = File(root, md5(cacheUrl).toHexString())
-    return cacheFile
+    val cacheFile = File(root, md5(cacheRule.source.toString()).toHexString())
+    return cacheTarget(cacheFile)
 }
 
-private fun getCacheUrl(url: String, runningBuild: AgentRunningBuild): String? {
+private fun getCacheUrl(url: String, runningBuild: AgentRunningBuild): cacheRule? {
     val params = runningBuild.agentConfiguration.configurationParameters
     if (params.containsKey(DISABLED_CONFIG_KEY))
         return null
-    val repositories = runningBuild.sharedConfigParameters[cachedSubversionConstants.REPOSITORIES_CONFIG_KEY] ?: return null
-    val repo = repositories.split("\n")
-            .map { it.trim().trimEnd('/') }
-            .firstOrNull { !it.isNullOrBlank() && (url == it || url.startsWith(it + "/")) }
-    return repo
+    val rules = getCacheRules(runningBuild)
+    for (rule in rules) {
+        val cur = rule.source.removePathTail().toString()
+        if (!cur.isNullOrBlank() && (url == cur || url.startsWith(cur + "/")))
+            return rule
+    }
+    return null
 }
 
-private fun getCheckoutMode(value: String?): checkoutMode {
-    when (value) {
-        "revertCheckout" -> return checkoutMode.RevertCheckout
-        "checkout" -> return checkoutMode.Checkout
-        "deleteExport" -> return checkoutMode.DeleteExport
-        "export" -> return checkoutMode.Export
+private fun getCheckoutSettings(parameters: Map<String, String>): checkoutSettings {
+    var mode = checkoutMode.Checkout
+    var revert = false
+    var clean = false
+    when (parameters[cachedSubversionConstants.MODE_CONFIG_KEY]) {
+        "revertCheckout" -> {// obsolete value
+            mode = checkoutMode.Checkout
+            revert = true
+            clean = true
+        }
+        "checkout" -> {// obsolete value
+            mode = checkoutMode.Checkout
+            revert = false
+            clean = false
+        }
+        "deleteExport" -> {//obsolete value
+            mode = checkoutMode.Export
+            clean = true
+        }
+        "export" -> {// obsolete value
+            mode = checkoutMode.Export
+            clean = false
+        }
+        "Checkout" -> {
+            mode = checkoutMode.Checkout
+        }
+        "Export" -> {
+            mode = checkoutMode.Export
+        }
     }
-    return checkoutMode.RevertCheckout
+    if (mode == checkoutMode.Checkout) {
+        if (parameters.containsKey(cachedSubversionConstants.REVERT_CONFIG_KEY))
+            revert = true
+        if (parameters.containsKey(cachedSubversionConstants.CLEAN_CONFIG_KEY))
+            clean = true
+    } else {
+        if (parameters.containsKey(cachedSubversionConstants.DELETE_CONFIG_KEY))
+            clean = true
+    }
+    return checkoutSettings(mode, revert, clean)
+}
+
+private fun getCacheRules(runningBuild: AgentRunningBuild): List<cacheRule> {
+    val value = runningBuild.sharedConfigParameters[cachedSubversionConstants.REPOSITORIES_CONFIG_KEY]
+    var result = listOf<cacheRule>()
+    if (value != null)
+        result = value.split("\n").map { cacheRule(it.trim()) }
+    return result
 }
