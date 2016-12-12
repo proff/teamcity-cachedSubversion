@@ -42,10 +42,10 @@ File *config/cachedSubversion.repositories* on server contains urls you want to 
 2. name for reference in agent parameters
 3. cache path/url - default cache url for this repository. Overrides agent parameter *cachedSubversion.cachePath*, overridable by *cachedSubversion.cachePath.{name}* agent parameter   
 
-    http://example.com/test1/trunk/subdirectory
-    http://example.com/test2 test2
-    http://example.com/test3 test3 //network/path/to/shared/cache 
-    http://example.com/test4 test4 http://example.org/cache 
+    http://example.com/test1/trunk/subdirectory    
+    http://example.com/test2 test2    
+    http://example.com/test3 test3 //network/path/to/shared/cache    
+    http://example.com/test4 test4 http://example.org/cache  
 
 # Shared Cache
 
