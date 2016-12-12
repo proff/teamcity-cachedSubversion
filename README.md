@@ -37,6 +37,7 @@ execute *mvn package* in root folder
 # Server Side Configuration
 
 File *config/cachedSubversion.repositories* on server contains urls you want to cache. Write on each line space delimited parameters:
+
 1. source url
 2. name for reference in agent parameters
 3. cache path/url - default cache url for this repository. Overrides agent parameter *cachedSubversion.cachePath*, overridable by *cachedSubversion.cachePath.{name}* agent parameter   
@@ -49,6 +50,7 @@ File *config/cachedSubversion.repositories* on server contains urls you want to 
 # Shared Cache
 
 Several agents can share one cache. Shared cache can be:
+
 1. network path
 2. HTTP repository (recommended)
 
