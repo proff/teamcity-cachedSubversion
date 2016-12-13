@@ -16,7 +16,6 @@
         </props:selectProperty>
         <span class="smallNote">
             <b>Checkout/update</b> - checkout/update after swabra cleanup. <b>.svn</b> directory will be in working directory.<br/>
-            <b>Delete and export</b> - delete folder and export from repository. Working copy will be without <b>.svn</b> directory, updates will be slower<br/>Checkout rules to file always use this value<br/><br/>
             <b>Export</b> - Export directory from repository. Working copy will be without <b>.svn</b> directory, updates will be slower. Deleted in repository files will remain intact<br/><br/>
     </span>
     </td>

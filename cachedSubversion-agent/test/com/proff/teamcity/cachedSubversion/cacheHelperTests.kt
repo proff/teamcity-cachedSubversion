@@ -10,7 +10,7 @@ import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.wc.SVNRevision
 import java.io.File
 
-class cacherTests : TestCase() {
+class cacheHelperTests : TestCase() {
     fun testEmptyRules() {
         val vcs = vcsCheckoutSettings()
         vcs.url = "http://example.com"
@@ -23,7 +23,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -48,7 +48,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -56,7 +56,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("agentSystem/cachedSubversion/a9b9f04336ce0181a08e774e01113b31")
@@ -89,7 +89,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -97,7 +97,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build, times(2)).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("agentSystem/cachedSubversion/a9b9f04336ce0181a08e774e01113b31")
@@ -136,7 +136,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -144,7 +144,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build, times(2)).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("agentSystem/cachedSubversion/a9b9f04336ce0181a08e774e01113b31")
@@ -183,7 +183,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -191,7 +191,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build, times(2)).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("agentSystem/cachedSubversion/a9b9f04336ce0181a08e774e01113b31")
@@ -222,7 +222,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -230,7 +230,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("agentSystem/cachedSubversion/a9b9f04336ce0181a08e774e01113b31")
@@ -260,7 +260,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -268,7 +268,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("agentSystem/cachedSubversion/a9b9f04336ce0181a08e774e01113b31")
@@ -300,14 +300,14 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
         verify(build, atLeast(1)).agentConfiguration(any())
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val url = SVNURL.parseURIEncoded("http://example.org")
@@ -334,7 +334,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -342,7 +342,7 @@ class cacherTests : TestCase() {
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).agentSystemDirectory()
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("customPath/a9b9f04336ce0181a08e774e01113b31")
@@ -372,14 +372,14 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
         verify(build, atLeast(1)).agentConfiguration(any())
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val url = SVNURL.parseURIEncoded("http://example.org")
@@ -406,7 +406,7 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
@@ -429,14 +429,14 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
         verify(build, atLeast(1)).agentConfiguration(any())
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val url = SVNURL.parseURIEncoded("http://example.org")
@@ -462,14 +462,14 @@ class cacherTests : TestCase() {
         }
         val fileHelper = mock<iFileHelper> {
         }
-        val c = cacher(build, fileHelper)
+        val c = cacheHelper(build, fileHelper)
 
         c.doCache(vcs, client)
 
         verify(build, atLeast(1)).agentConfiguration(any())
         verify(build).config(cachedSubversionConstants.REPOSITORIES_CONFIG_KEY)
         verify(build).interruptReason()
-        verify(build).activity(any(), any())
+        verify(build).activity(any())
         verify(build, atLeastOnce()).message(any())
 
         val file = File("customServerPath")

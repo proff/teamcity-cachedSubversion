@@ -31,6 +31,7 @@ execute *mvn package* in root folder
 # Additional Agent Side Parameters
 
 * cachedSubversion.disabled - if parameter exists, than agent will be used original url
+* cachedSubversion.cli.disabled - by default plugin used command line tools if found. This setting allows use bundled svnkit instead of cli tools
 * cachedSubversion.cachePath - local or network path to all repositories cache
 * cachedSubversion.cachePath.{name} - local or network or http path to specific repository cache. Overrides *cachedSubversion.cachePath* parameter 
 

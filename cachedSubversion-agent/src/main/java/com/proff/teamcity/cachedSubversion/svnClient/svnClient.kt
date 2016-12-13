@@ -14,7 +14,13 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
             val authManager = DefaultSVNAuthenticationManager(null, false, user, password?.toCharArray(), null, null)
             if (user != null)
                 authManager.isAuthenticationForced = true
-            return svnClient(svnKit(authManager, { if (build.interruptReason != null) throw SVNCancelException() }), runningBuild(build), fileHelper())
+            val b = runningBuild(build)
+            val canceller = { if (build.interruptReason != null) throw SVNCancelException() }
+            val svn = if (build.agentConfiguration.configurationParameters.containsKey(cachedSubversionConstants.CLI_DISABLED_CONFIG_KEY))
+                svnKit(authManager, canceller)
+            else
+                svnCli(user ?: "", password ?: "", b, authManager, canceller)
+            return svnClient(svn, b, fileHelper())
         }
     }
 
@@ -59,18 +65,19 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
         return kit.doInfo(url).lastMergedRevision
     }
 
-    fun checkout(url: SVNURL, to: File, revision: SVNRevision, settings: checkoutSettings) {
+    override fun checkout(url: SVNURL, to: File, revision: SVNRevision, settings: checkoutSettings) {
         if (settings.mode == checkoutMode.Export) {
             if (settings.clean) {
                 if (!fileHelper.deleteRecursively(to))
                     build.warning("Directory $to can't be completely deleted")
             }
+            to.parentFile?.mkdirs()
             kit.doExport(url, to, revision, revision, null, true, SVNDepth.INFINITY)
             return
         }
         if (fileHelper.isDirectory(to) && fileHelper.isDirectory(File(to, ".svn"))) {
             val root = kit.doStatus(to, false).remoteURL
-            if (root == url) {
+            if (root.toString().toLowerCase() == url.toString().toLowerCase()) {
                 kit.doUpdate(to, revision, SVNDepth.INFINITY, true, true)
                 return
             }
@@ -78,6 +85,7 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
                 throw cachedSubversionException("could not delete folder $to")
             }
         }
+        to.parentFile?.mkdirs()
         if (isFile(url, revision)) {
             kit.doExport(url, to, revision, revision, null, true, SVNDepth.INFINITY)
         } else {
@@ -93,14 +101,14 @@ open class svnClient(val kit: iSvnKit, val build: iRunningBuild, val fileHelper:
         return kit.getReposRoot(null, url, revision)
     }
 
-    fun revert(to: File) {
+    override fun revert(to: File) {
         if (fileHelper.isDirectory(to) && fileHelper.isDirectory(File(to, ".svn"))) {
             val list = mutableListOf<String>()
             kit.doRevert(arrayOf(to), SVNDepth.INFINITY, list)
         }
     }
 
-    fun cleanup(to: File) {
+    override fun cleanup(to: File) {
         if (fileHelper.isDirectory(to) && fileHelper.isDirectory(File(to, ".svn"))) {
             kit.doCleanup(to)
         }

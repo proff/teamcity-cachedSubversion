@@ -26,6 +26,16 @@ class cachedSubversionBuildFeature(val pluginDescriptor: PluginDescriptor) : Bui
 
     override fun describeParameters(params: MutableMap<String, String>): String {
         val mode = params[MODE_CONFIG_KEY]
-        return "Will be cache svn repository on agent. Selected checkout mode: $mode"
+        val sb = StringBuilder()
+        sb.append("Will be cache svn repository on agent. Mode is $mode. ")
+        if (mode == "Checkout") {
+            if (params.containsKey(cachedSubversionConstants.CLEAN_CONFIG_KEY))
+                sb.append("Cleanup is enabled. ")
+            if (params.containsKey(cachedSubversionConstants.REVERT_CONFIG_KEY))
+                sb.append("Revert is enabled. ")
+        }
+        if (mode == "Export" && params.containsKey(cachedSubversionConstants.DELETE_CONFIG_KEY))
+            sb.append("Delete is enabled. ")
+        return sb.toString()
     }
 }

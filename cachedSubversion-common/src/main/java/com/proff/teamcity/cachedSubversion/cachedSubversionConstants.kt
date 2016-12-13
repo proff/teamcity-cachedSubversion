@@ -4,6 +4,7 @@ class cachedSubversionConstants {
     companion object {
         val FEATURE_TYPE = "cachedSubversion"
         val DISABLED_CONFIG_KEY = "cachedSubversion.disabled"
+        val CLI_DISABLED_CONFIG_KEY = "cachedSubversion.cli.disabled"
         val CACHE_PATH_CONFIG_KEY = "cachedSubversion.cachePath"
         val MODE_CONFIG_KEY = "cachedSubversion.mode"
         val REVERT_CONFIG_KEY = "cachedSubversion.revert"

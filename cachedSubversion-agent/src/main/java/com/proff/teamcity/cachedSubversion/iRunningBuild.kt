@@ -14,7 +14,7 @@ interface iRunningBuild {
     fun warning(message: String)
     fun getBuildFeaturesOfType(type: String): List<AgentBuildFeature>
     fun checkoutType(): AgentBuild.CheckoutType
-    fun activity(name: String, type: String): Closeable
+    fun activity(name: String): Closeable
     fun vcsRootEntries(): List<VcsRootEntry>
     fun getBuildCurrentVersion(vcsRoot: VcsRoot): String
     fun checkoutDirectory(): File

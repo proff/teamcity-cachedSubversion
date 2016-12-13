@@ -7,7 +7,7 @@ import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.wc.SVNRevision
 import java.io.File
 
-class cacher(val build: iRunningBuild, val fileHelper: iFileHelper) : iCacher {
+class cacheHelper(val build: iRunningBuild, val fileHelper: iFileHelper) : iCacheHelper {
     override fun doCache(vcs: vcsCheckoutSettings, client: iSvnClient): SVNURL? {
         val cacheRule = getCacheUrl(vcs.url)
         if (cacheRule != null) {
@@ -31,7 +31,7 @@ class cacher(val build: iRunningBuild, val fileHelper: iFileHelper) : iCacher {
     }
 
     private fun doCache(rule: cacheRule, revision: Long, client: iSvnClient): SVNURL {
-        build.activity("caching ${rule.source}", DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT).use {
+        build.activity("caching ${rule.source}").use {
             val cacheTarget = getCacheTarget(rule)
             if (cacheTarget.file != null && !fileHelper.exists(cacheTarget.file)) {
                 fileHelper.mkdirs(cacheTarget.file)

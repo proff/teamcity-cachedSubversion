@@ -19,7 +19,7 @@ class checkoutSettings() {
                     "revertCheckout" -> {// obsolete value
                         result.mode = checkoutMode.Checkout
                         result.revert = true
-                        result.clean = true
+                        result.clean = false
                     }
                     "checkout" -> {// obsolete value
                         result.mode = checkoutMode.Checkout

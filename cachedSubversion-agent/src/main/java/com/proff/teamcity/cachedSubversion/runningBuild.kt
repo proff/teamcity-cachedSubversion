@@ -4,6 +4,7 @@ import jetbrains.buildServer.agent.AgentBuildFeature
 import jetbrains.buildServer.agent.AgentRunningBuild
 import jetbrains.buildServer.agent.BuildInterruptReason
 import jetbrains.buildServer.agentServer.AgentBuild
+import jetbrains.buildServer.messages.DefaultMessagesInfo
 import jetbrains.buildServer.vcs.VcsRoot
 import jetbrains.buildServer.vcs.VcsRootEntry
 import java.io.Closeable
@@ -38,9 +39,9 @@ class runningBuild(val build: AgentRunningBuild) : iRunningBuild {
         return build.vcsRootEntries
     }
 
-    override fun activity(name: String, type: String): Closeable {
-        build.buildLogger.activityStarted(name, type)
-        return com.proff.teamcity.cachedSubversion.activity(build.buildLogger, name, type)
+    override fun activity(name: String): Closeable {
+        build.buildLogger.activityStarted(name, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
+        return com.proff.teamcity.cachedSubversion.activity(build.buildLogger, name, DefaultMessagesInfo.BLOCK_TYPE_CHECKOUT)
     }
 
     override fun checkoutType(): AgentBuild.CheckoutType {

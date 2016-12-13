@@ -8,7 +8,7 @@ import org.tmatesoft.svn.core.wc.*
 import org.tmatesoft.svn.core.wc.admin.SVNSyncInfo
 import java.io.File
 
-class svnKit(val authManager: ISVNAuthenticationManager, val canceller: () -> Unit) : iSvnKit {
+open class svnKit(val authManager: ISVNAuthenticationManager, val canceller: () -> Unit) : iSvnKit {
     override fun checkPath(url: SVNURL, path: String, revision: SVNRevision): SVNNodeKind {
         return createRepo(url).checkPath(path, revision.number)
     }
